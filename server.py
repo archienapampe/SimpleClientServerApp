@@ -11,29 +11,23 @@ server_socket.settimeout(3)
 server_socket.listen()
 
 menu = {
-    'drinks_menu': {
-        'type': 'choose_drink',
         'drinks': {
-            'coffe': 2,
+            'coffee': 2,
             'cappucino': 2
-            }
-        },
-    
-    'ingredients_menu': {
-        'type': 'choose_ingredients',
+            },
+        
         'ingredients': {
             'milk': 2,
             'sugar': 2
             }
         }
-    }
-
+    
 def accept_connection(server_socket):
     while True:
             try:
                 client_socket, addr = server_socket.accept()
                 log.info(f'{client_socket=}, {addr=}')
-                print("Connection from", addr)
+                print('Connection from', addr)
             except socket.error:
                 print('lets buy some drink!!!')
             except KeyboardInterrupt:
@@ -44,28 +38,27 @@ def accept_connection(server_socket):
                 send_message(client_socket)
     
 def send_message(client_socket):
-    client_socket.sendall(f"choose your drink with ingredient\n \
-                          {json.dumps(menu, indent=4)}".encode())
+    client_socket.sendall(f'{json.dumps(menu, indent=16)}'.encode())
     while True:
         try:
             choice_drinks = client_socket.recv(4096).decode('utf-8')
-            if menu['drinks_menu']['drinks'][choice_drinks] == 0:
-                client_socket.sendall(f"Sorry, but I have no {choice_drinks}".encode())
+            if menu['drinks'][choice_drinks] == 0:
+                client_socket.sendall(f'Sorry, but I have no {choice_drinks}'.encode())
                 break
-            menu['drinks_menu']['drinks'][choice_drinks] -= 1
-            log.info(f"{choice_drinks=} | remains {menu['drinks_menu']['drinks'][choice_drinks]}")
+            menu['drinks'][choice_drinks] -= 1
+            log.info(f"{choice_drinks=} | {menu['drinks'][choice_drinks]} items left")
             
             choice_ingredients = client_socket.recv(4096).decode('utf-8')
-            if menu['ingredients_menu']['ingredients'][choice_ingredients] == 0:
-                client_socket.sendall(f"Sorry, but I have no {choice_ingredients}".encode())
+            if menu['ingredients'][choice_ingredients] == 0:
+                client_socket.sendall(f'Sorry, but I have no {choice_ingredients}'.encode())
                 break
-            menu['ingredients_menu']['ingredients'][choice_ingredients] -= 1
-            log.info(f"{choice_ingredients=} | remains {menu['ingredients_menu']['ingredients'][choice_ingredients]}")
+            menu['ingredients'][choice_ingredients] -= 1
+            log.info(f"{choice_ingredients=} | {menu['ingredients'][choice_ingredients]} items left")
         except KeyError:
-            client_socket.sendall("Sorry, I cannot make it".encode())
+            client_socket.sendall('Sorry, I cannot make it'.encode())
             break
         
-        client_socket.sendall(f"take your {choice_drinks} with {choice_ingredients}".encode())
+        client_socket.sendall(f'take your {choice_drinks} with {choice_ingredients}'.encode())
         break
     client_socket.close()
 
@@ -73,8 +66,8 @@ def send_message(client_socket):
 if __name__ == '__main__':
     log = logging.getLogger('Coffee machine')
     log.setLevel(logging.INFO)
-    fh = logging.FileHandler("logging.log", "w", "utf-8")
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    fh = logging.FileHandler('logging.log', 'w', 'utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     log.addHandler(fh)
     
