@@ -1,7 +1,10 @@
 import socket
 import json
 import logging
+import threading
 
+lock = threading.Lock()
+event = threading.Event()
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -21,43 +24,65 @@ menu = {
             'sugar': 2
             }
         }
-    
-def accept_connection(server_socket):
+
+
+def accept_connection(server_socket, lock, event):
     while True:
+        try:
             try:
-                client_socket, addr = server_socket.accept()
-                log.info(f'{addr=}')
-                print('Connection from', addr)
-            except socket.error:
-                print('lets buy some drink!!!')
-            except KeyboardInterrupt:
-                server_socket.close()
-                break
+                client_socket, _ = server_socket.accept()
+            except socket.timeout:
+                print('lets buy some drink!')
             else:
                 client_socket.setblocking(True)
-                send_message(client_socket)
-                
-def send_message(client_socket):
-    client_socket.sendall(f'{json.dumps(menu, indent=16)}'.encode())
+                if not lock.locked():
+                    lock.acquire()
+                    th = threading.Thread(target=show_menu, args=(client_socket, event)) 
+                    log.info('coffee machine has started')
+                    th.start()
+                else:
+                    log.info(f'client has connected')
+                    send_message(client_socket, event)
+        except KeyboardInterrupt:
+                server_socket.close()
+                break
+        
+
+def show_menu(client_socket, event):
+    while True:
+        client_socket.sendall(f'{json.dumps(menu, indent=16)}'.encode()) 
+        event.wait()
+    
+                    
+def send_message(client_socket, event): 
     while True:
         try:
             choice_drink, choice_ingredient = client_socket.recv(4096).decode('utf-8').split('\n')
-            if all((menu['drinks'][choice_drink], menu['ingredients'][choice_ingredient])):
-                menu['drinks'][choice_drink] -= 1
-                menu['ingredients'][choice_ingredient] -= 1
-                log.info(f'client ordered {choice_drink} with {choice_ingredient}')
-                client_socket.sendall(f'Take your {choice_drink} with {choice_ingredient}'.encode())
-                break
-            else:
-                client_socket.sendall(f'I have not enough {choice_drink} or {choice_ingredient}'.encode())
-                break
+            drink = menu['drinks'][choice_drink]
+            ingredient = menu['ingredients'][choice_ingredient]
         except KeyError:
+            log.error(f'client has ordered non-existent drink \u2013 {choice_drink=}, {choice_ingredient=}')
             client_socket.sendall('Sorry, I cannot make it'.encode())
             break
         except ValueError:
+            log.info('client have bought nothing')
             break
+        else:
+            if all((drink, ingredient)):
+                menu['drinks'][choice_drink] -= 1
+                menu['ingredients'][choice_ingredient] -= 1
+                log.info(f'client has ordered {choice_drink} with {choice_ingredient}')
+                client_socket.sendall(f'Take your {choice_drink} with {choice_ingredient}'.encode())
+                break
+            else:
+                log.warning(f'coffe machine has no {choice_drink} or {choice_ingredient}')
+                client_socket.sendall(f'I have no {choice_drink} or {choice_ingredient}'.encode())
+                break
+    event.set()
+    event.clear()
+    log.info('client has disconnected')
     client_socket.close()
-
+    
 
 if __name__ == '__main__':
     log = logging.getLogger('Coffee machine')
@@ -67,9 +92,5 @@ if __name__ == '__main__':
     fh.setFormatter(formatter)
     log.addHandler(fh)
     
-    accept_connection(server_socket)
-               
-    
-   
-
+    accept_connection(server_socket, lock, event)
     
