@@ -6,7 +6,7 @@ def connecting():
     try:
         with socket.create_connection(('localhost', 5001)) as client_socket:
             drinks_menu, ingredients_menu = literal_eval(client_socket.recv(4096).decode("utf-8"))
-            print('DRINKS MENU', end='\n\n')
+            print('\n\nDRINKS MENU', end='\n\n')
             for drink in drinks_menu:
                 print(drink[0])
             print('\n\n')
@@ -24,6 +24,4 @@ def connecting():
     
             
 if __name__ == '__main__':
-    connecting()
-    
-    
+    connecting()   

@@ -148,30 +148,3 @@ with open('menu_data/data.json', 'r') as f:
 def initialize_menu():
     initialize_connection(create_menu, TABLE_NAME_FOR_DRINKS, drinks_menu)
     initialize_connection(create_menu, TABLE_NAME_FOR_INGREDIENTS, ingredients_menu)
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

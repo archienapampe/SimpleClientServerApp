@@ -5,7 +5,7 @@ def connecting():
     try:
         with socket.create_connection(('localhost', 5001)) as client_socket:
             while True:
-                drink = input('Choose your drink: ').strip()
+                drink = input('\n\nChoose your drink: ').strip()
                 if drink:
                     ingredient = input('Choose your ingredient: ').strip()
                     if ingredient:
@@ -13,7 +13,7 @@ def connecting():
                         break
                 print('You did not choose anything')
             message = client_socket.recv(4096).decode("utf-8")
-            print(message)
+            print(message, end='\n\n')
     except ConnectionError:
         print('coffee machine is not working')
     except KeyboardInterrupt:
@@ -22,6 +22,3 @@ def connecting():
 
 if __name__ == '__main__':
     connecting()
-        
-
-

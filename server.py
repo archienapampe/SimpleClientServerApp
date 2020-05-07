@@ -91,4 +91,3 @@ if __name__ == '__main__':
     
     initialize_menu()
     accept_connection(server_socket, lock, event)
-    
