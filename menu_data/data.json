@@ -1,0 +1,20 @@
+{
+    "drinks": {
+                "Espresso": 3, 
+                "Macchiato": 3,
+                "Americano": 3,
+                "Cappuccino": 3,
+                "Moccochino": 3,
+                "Frappe": 3,
+                "Latte": 3
+            },
+    "ingredients": {
+                "Milk": 3,
+                "Gelatin": 3,
+                "Sugar": 3,
+                "Cream": 3,
+                "Orange": 3,
+                "Chocolate": 3,
+                "Egg": 3
+            }
+}
