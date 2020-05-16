@@ -5,10 +5,8 @@ def connecting():
     try:
         with socket.create_connection(('localhost', 5001)) as client_socket:
             while True:
-                drink = input('\n\nChoose your drink: ').strip()
-                if drink:
-                    ingredient = input('Choose your ingredient: ').strip()
-                    if ingredient:
+                if drink := input('\n\nChoose your drink: ').strip():
+                    if ingredient := input('Choose your ingredient: ').strip():
                         client_socket.sendall(f'{drink}\n{ingredient}'.encode())
                         break
                 print('You did not choose anything')

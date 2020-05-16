@@ -1,7 +1,7 @@
 import socket
-import logging
 import threading
 
+from config import logging, LOGGER_CONFIG
 from menu_working import (
             menu,
             selected_items,
@@ -9,7 +9,7 @@ from menu_working import (
             update_menu,
             transfer_data,
             initialize_menu
-)
+            )
 
 lock = threading.Lock()
 event = threading.Event()
@@ -60,33 +60,37 @@ def send_message(client_socket, event):
             log.info('client have bought nothing')
             break
         else:
-            drinks_amount, ingredients_amount = transfer_data(items_amount, choice_drink, choice_ingredient)
-            if any((drinks_amount == None, ingredients_amount == None)):  
-                log.error(f'client has ordered non-existent drink \u2013 {choice_drink=}, {choice_ingredient=}')
-                client_socket.sendall('Sorry, I cannot make it'.encode())
+            try:
+                drinks_amount, ingredients_amount = transfer_data(items_amount, choice_drink, choice_ingredient)
+            except TypeError:
+                client_socket.sendall('Coffee machine database has some problems, please restart server'.encode())
                 break
             else:
-                if all((drinks_amount[0], ingredients_amount[0])):
-                    transfer_data(update_menu, choice_drink, choice_ingredient)
-                    event.set()
-                    log.info(f'client has ordered {choice_drink} with {choice_ingredient}')
-                    client_socket.sendall(f'Take your {choice_drink} with {choice_ingredient}'.encode())
+                if any((drinks_amount == [], ingredients_amount == [])):  
+                    log.error(f'client has ordered non-existent drink \u2013 {choice_drink=}, {choice_ingredient=}')
+                    client_socket.sendall('Sorry, I cannot make it'.encode())
                     break
                 else:
-                    log.warning(f'coffe machine has no {choice_drink} or {choice_ingredient}')
-                    client_socket.sendall(f'I have no {choice_drink} or {choice_ingredient}'.encode())
-                    break
-    
+                    if all((drinks_amount[0][0], ingredients_amount[0][0])):
+                        transfer_data(update_menu, choice_drink, choice_ingredient)
+                        event.set()
+                        log.info(f'client has ordered {choice_drink} with {choice_ingredient}')
+                        client_socket.sendall(f'Take your {choice_drink} with {choice_ingredient}'.encode())
+                        break
+                    else:
+                        log.warning(f'coffe machine has no {choice_drink} or {choice_ingredient}')
+                        client_socket.sendall(f'coffe machine has no {choice_drink} or {choice_ingredient}'.encode())
+                        break
+        
     log.info('client has disconnected')
     client_socket.close()
     
 
 if __name__ == '__main__':
     log = logging.getLogger('Coffee machine')
-    log.setLevel(logging.INFO)
-    fh = logging.FileHandler('history.log', 'w', 'utf-8')
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
+    log.setLevel(LOGGER_CONFIG['level'])
+    fh = logging.FileHandler(LOGGER_CONFIG['file'], 'w', 'utf-8')
+    fh.setFormatter(LOGGER_CONFIG['formatter'])
     log.addHandler(fh)
     
     initialize_menu()

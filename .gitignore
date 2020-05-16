@@ -1,4 +1,4 @@
 __pycache__
 
 *.log
-/menu_data/*.sqlite
+*.sqlite
